@@ -1,12 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"testing"
-	"time"
 )
 
 func TestNewEngine(t *testing.T) {
@@ -22,15 +19,5 @@ func mockExecCmd(cmd string, args ...string) *exec.Cmd {
 }
 
 func TestHelperCmd(t *testing.T) {
-	fmt.Println("hit")
-	input, _ := io.Pipe()
-
-	message := []byte{}
-	time.Sleep(1500)
-	_, err := io.ReadFull(input, message)
-	fmt.Println(string(message))
-	if err != nil {
-		panic(err)
-	}
 	os.Exit(0)
 }
