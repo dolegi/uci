@@ -10,8 +10,7 @@ import (
 )
 
 // TODO
-// test getMeta
-// test setOption
+// add option vars
 // test isready
 // new game
 // position
@@ -39,6 +38,7 @@ type Option struct {
 	Default interface{}
 	Min     int
 	Max     int
+	Vars    []string
 }
 
 var execCommand = exec.Command
@@ -59,6 +59,7 @@ func NewEngine(path string) (*Engine, error) {
 	}
 	eng.stdin = bufio.NewWriter(stdin)
 	eng.stdout = bufio.NewScanner(stdout)
+	eng.Meta = eng.GetMeta()
 	return &eng, nil
 }
 
@@ -78,7 +79,6 @@ func (eng *Engine) GetMeta() (meta Meta) {
 			meta.Options = append(meta.Options, NewOption(strings.TrimPrefix(line, optionPrefix)))
 		}
 	}
-	eng.Meta = meta
 	return meta
 }
 
@@ -98,9 +98,16 @@ func NewOption(line string) (option Option) {
 	option.Default = getOption(line, `default (\w+)`)
 	minStr, _ := getOption(line, `min (\w+)`).(string)
 	maxStr, _ := getOption(line, `max (\w+)`).(string)
-
 	option.Min, _ = strconv.Atoi(minStr)
 	option.Max, _ = strconv.Atoi(maxStr)
+
+	varRegex := regexp.MustCompile(`var (\w+)`)
+
+	vars := []string{}
+	for _, v := range varRegex.FindAllStringSubmatch(line, -1) {
+		vars = append(vars, v[1])
+	}
+	option.Vars = vars
 
 	return
 }
@@ -144,8 +151,6 @@ func (eng *Engine) receive(stopPrefix string) (lines []string) {
 
 func main() {
 	eng, _ := NewEngine("./stockfish")
-	meta := eng.GetMeta()
-	fmt.Println(meta)
 	passed := eng.SetOption("Threads", "10")
 	fmt.Println(passed)
 
