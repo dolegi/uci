@@ -10,14 +10,14 @@ import (
 )
 
 // TODO
-// add option vars
-// test isready
 // new game
 // position
 // go
 // stop
 // ponderhit
 // quit
+// debug mode
+// channel for info messages
 
 type Engine struct {
 	stdin  *bufio.Writer
@@ -112,10 +112,25 @@ func NewOption(line string) (option Option) {
 	return
 }
 
-func (eng *Engine) SetOption(name, value string) bool {
+func (eng *Engine) SetOption(name string, value interface{}) bool {
 	for _, option := range eng.Meta.Options {
 		if option.Name == name {
-			eng.send("setoption name " + name + " value " + value)
+			var v string
+			switch value.(type) {
+			case string:
+				v, _ = value.(string)
+			case int:
+				vv, _ := value.(int)
+				v = strconv.Itoa(vv)
+			case bool:
+				vv, _ := value.(bool)
+				if vv {
+					v = "true"
+				} else {
+					v = "false"
+				}
+			}
+			eng.send("setoption name " + name + " value " + v)
 			return true
 		}
 	}
@@ -151,6 +166,7 @@ func (eng *Engine) receive(stopPrefix string) (lines []string) {
 
 func main() {
 	eng, _ := NewEngine("./stockfish")
+	fmt.Println(eng.SetOption("Ponder", false))
 	passed := eng.SetOption("Threads", "10")
 	fmt.Println(passed)
 

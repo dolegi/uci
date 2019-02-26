@@ -75,3 +75,10 @@ func TestNewEngineStockfish(t *testing.T) {
 		log.Fatal("NewEngineStockfish meta does not match", eng.Meta, expectedMeta)
 	}
 }
+
+func TestIsReady(t *testing.T) {
+	eng, _ := NewEngine("./stockfish")
+	if eng.IsReady() != true {
+		log.Fatal("TestIsReady did not return true")
+	}
+}
