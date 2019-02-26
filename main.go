@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
 // TODO
-// get id name
-// get options
+// test getMeta
+// test setOption
+// test isready
 // new game
-// set option
-// check if ready
 // position
 // go
 // stop
@@ -24,6 +24,7 @@ type Engine struct {
 	stdin  *bufio.Writer
 	stdout *bufio.Scanner
 	moves  string
+	Meta   Meta
 }
 
 type Meta struct {
@@ -62,7 +63,8 @@ func NewEngine(path string) (*Engine, error) {
 }
 
 func (eng *Engine) GetMeta() (meta Meta) {
-	lines := eng.send("uci", "uciok")
+	eng.send("uci")
+	lines := eng.receive("uciok")
 
 	namePrefix := "id name "
 	authorPrefix := "id author "
@@ -76,26 +78,54 @@ func (eng *Engine) GetMeta() (meta Meta) {
 			meta.Options = append(meta.Options, NewOption(strings.TrimPrefix(line, optionPrefix)))
 		}
 	}
+	eng.Meta = meta
 	return meta
 }
 
-func NewOption(line string) (option Option) {
-	nameRegex := regexp.MustCompile(`name (.*) type`)
-	typeRegex := regexp.MustCompile(`type (\w+)`)
+func getOption(line, regex string) interface{} {
+	rr := regexp.MustCompile(regex)
+	results := rr.FindStringSubmatch(line)
 
-	option.Name = nameRegex.FindStringSubmatch(line)[1]
-	option.Type = typeRegex.FindStringSubmatch(line)[1]
+	if len(results) == 2 {
+		return results[1]
+	}
+	return nil
+}
+
+func NewOption(line string) (option Option) {
+	option.Name, _ = getOption(line, `name (.*) type`).(string)
+	option.Type, _ = getOption(line, `type (\w+)`).(string)
+	option.Default = getOption(line, `default (\w+)`)
+	minStr, _ := getOption(line, `min (\w+)`).(string)
+	maxStr, _ := getOption(line, `max (\w+)`).(string)
+
+	option.Min, _ = strconv.Atoi(minStr)
+	option.Max, _ = strconv.Atoi(maxStr)
 
 	return
 }
 
-func (eng *Engine) send(input, stopPrefix string) (lines []string) {
+func (eng *Engine) SetOption(name, value string) bool {
+	for _, option := range eng.Meta.Options {
+		if option.Name == name {
+			eng.send("setoption name " + name + " value " + value)
+			return true
+		}
+	}
+	return false
+}
+
+func (eng *Engine) IsReady() bool {
+	eng.send("isready")
+	lines := eng.receive("readyok")
+	return lines[0] == "readyok"
+}
+
+func (eng *Engine) send(input string) {
 	_, err := eng.stdin.WriteString(input + "\n")
 	if err == nil {
 		eng.stdin.Flush()
 	}
-
-	return eng.receive(stopPrefix)
 }
 
 func (eng *Engine) receive(stopPrefix string) (lines []string) {
@@ -116,4 +146,8 @@ func main() {
 	eng, _ := NewEngine("./stockfish")
 	meta := eng.GetMeta()
 	fmt.Println(meta)
+	passed := eng.SetOption("Threads", "10")
+	fmt.Println(passed)
+
+	fmt.Println(eng.IsReady())
 }
