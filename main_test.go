@@ -85,9 +85,30 @@ func TestIsReady(t *testing.T) {
 
 func TestNewGame(t *testing.T) {
 	eng, _ := NewEngine("./stockfish")
-	eng.NewGame()
+	eng.NewGame(NewGameOpts{})
 
 	if eng.moves != "" {
 		log.Fatal("TestNewGame too many moves")
+	}
+}
+
+func TestPositionFEN(t *testing.T) {
+	eng, _ := NewEngine("./stockfish")
+	eng.NewGame(NewGameOpts{})
+	eng.Position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+
+	if eng.moves != "" {
+		log.Fatal("TestPositionFEN too many moves")
+	}
+}
+
+func TestPosition(t *testing.T) {
+	eng, _ := NewEngine("./stockfish")
+	eng.NewGame(NewGameOpts{1, 0})
+	eng.Position("e2e4")
+	eng.Position("d7d6")
+
+	if eng.moves != " e2e4 d7d6" {
+		log.Fatal("TestPosition wrong amount of moves")
 	}
 }

@@ -10,8 +10,6 @@ import (
 )
 
 // TODO
-// new game
-// position
 // go
 // stop
 // ponderhit
@@ -24,6 +22,8 @@ type Engine struct {
 	stdout *bufio.Scanner
 	Meta   Meta
 	moves  string
+	Side   int
+	Type   int
 }
 
 type Meta struct {
@@ -40,6 +40,18 @@ type Option struct {
 	Max     int
 	Vars    []string
 }
+
+type NewGameOpts struct {
+	Type int
+	Side int
+}
+
+const (
+	FEN int = 0
+	PGN int = 1
+	W   int = 0
+	B   int = 1
+)
 
 var execCommand = exec.Command
 
@@ -164,9 +176,29 @@ func (eng *Engine) receive(stopPrefix string) (lines []string) {
 	return
 }
 
-func (eng *Engine) NewGame() {
+func (eng *Engine) NewGame(opts NewGameOpts) {
 	eng.send("newucigame")
+	if opts.Type == FEN {
+		if opts.Side == W {
+			eng.send("position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+		} else {
+			eng.send("position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1")
+		}
+	} else {
+		eng.send("position startpos")
+	}
+	eng.Type = opts.Type
+	eng.Side = opts.Side
 	eng.moves = ""
+}
+
+func (eng *Engine) Position(pos string) {
+	if eng.Type == FEN {
+		eng.send("position fen " + pos)
+	} else {
+		eng.moves = eng.moves + " " + pos
+		eng.send("position " + eng.moves)
+	}
 }
 
 func main() {
