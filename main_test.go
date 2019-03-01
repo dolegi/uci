@@ -82,3 +82,12 @@ func TestIsReady(t *testing.T) {
 		log.Fatal("TestIsReady did not return true")
 	}
 }
+
+func TestNewGame(t *testing.T) {
+	eng, _ := NewEngine("./stockfish")
+	eng.NewGame()
+
+	if eng.moves != "" {
+		log.Fatal("TestNewGame too many moves")
+	}
+}

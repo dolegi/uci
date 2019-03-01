@@ -22,8 +22,8 @@ import (
 type Engine struct {
 	stdin  *bufio.Writer
 	stdout *bufio.Scanner
-	moves  string
 	Meta   Meta
+	moves  string
 }
 
 type Meta struct {
@@ -162,6 +162,11 @@ func (eng *Engine) receive(stopPrefix string) (lines []string) {
 		fmt.Println("reading standard input:", err)
 	}
 	return
+}
+
+func (eng *Engine) NewGame() {
+	eng.send("newucigame")
+	eng.moves = ""
 }
 
 func main() {
