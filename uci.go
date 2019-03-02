@@ -9,11 +9,6 @@ import (
 	"strings"
 )
 
-// TODO
-// go infinite + stop
-// ponderhit
-// debug mode
-
 type engine struct {
 	stdin  *bufio.Writer
 	stdout *bufio.Scanner
