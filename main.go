@@ -10,12 +10,11 @@ import (
 )
 
 // TODO
-// go
+// go infinite
 // stop
 // ponderhit
 // quit
 // debug mode
-// channel for info messages
 
 type Engine struct {
 	stdin  *bufio.Writer
@@ -46,9 +45,28 @@ type NewGameOpts struct {
 	Side int
 }
 
+type GoOpts struct {
+	SearchMoves string
+	Ponder      bool
+	Wtime       int
+	Btime       int
+	Winc        int
+	Binc        int
+	MovesToGo   int
+	Depth       int
+	Nodes       int
+	Mate        int
+	MoveTime    int
+}
+
+type GoResp struct {
+	Bestmove string
+	Ponder   string
+}
+
 const (
-	FEN int = 0
-	PGN int = 1
+	ALG int = 0
+	FEN int = 1
 	W   int = 0
 	B   int = 1
 )
@@ -163,8 +181,9 @@ func (eng *Engine) send(input string) {
 }
 
 func (eng *Engine) receive(stopPrefix string) (lines []string) {
-	for eng.stdout.Scan() {
-		line := eng.stdout.Text()
+	scanner := eng.stdout
+	for scanner.Scan() {
+		line := scanner.Text()
 		lines = append(lines, line)
 		if strings.HasPrefix(line, stopPrefix) {
 			break
@@ -177,19 +196,19 @@ func (eng *Engine) receive(stopPrefix string) (lines []string) {
 }
 
 func (eng *Engine) NewGame(opts NewGameOpts) {
-	eng.send("newucigame")
 	if opts.Type == FEN {
 		if opts.Side == W {
 			eng.send("position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
 		} else {
 			eng.send("position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1")
 		}
+		eng.moves = ""
 	} else {
-		eng.send("position startpos")
+		eng.moves = "startpos moves"
+		eng.send("position " + eng.moves)
 	}
 	eng.Type = opts.Type
 	eng.Side = opts.Side
-	eng.moves = ""
 }
 
 func (eng *Engine) Position(pos string) {
@@ -201,11 +220,46 @@ func (eng *Engine) Position(pos string) {
 	}
 }
 
+func addOpt(name string, value int) string {
+	if value > 0 {
+		return name + " " + strconv.Itoa(value)
+	}
+	return ""
+}
+
+func (eng *Engine) Go(opts GoOpts) GoResp {
+	goCmd := "go "
+	if opts.Ponder {
+		goCmd += "ponder "
+	}
+	goCmd += addOpt("wtime", opts.Wtime)
+	goCmd += addOpt("btime", opts.Btime)
+	goCmd += addOpt("winc", opts.Winc)
+	goCmd += addOpt("binc", opts.Binc)
+	goCmd += addOpt("movestogo", opts.MovesToGo)
+	goCmd += addOpt("depth", opts.Depth)
+	goCmd += addOpt("nodes", opts.Nodes)
+	goCmd += addOpt("mate", opts.Mate)
+	goCmd += addOpt("movetime", opts.MoveTime)
+
+	eng.send(goCmd)
+	lines := eng.receive("bestmove")
+	words := strings.Split(lines[len(lines)-1], " ")
+
+	return GoResp{
+		Bestmove: words[1],
+		Ponder:   words[3],
+	}
+}
+
 func main() {
 	eng, _ := NewEngine("./stockfish")
-	fmt.Println(eng.SetOption("Ponder", false))
-	passed := eng.SetOption("Threads", "10")
-	fmt.Println(passed)
-
-	fmt.Println(eng.IsReady())
+	eng.SetOption("Ponder", false)
+	eng.SetOption("Threads", "2")
+	if eng.IsReady() {
+		eng.NewGame(NewGameOpts{})
+		eng.Position("e2e4")
+		resp := eng.Go(GoOpts{MoveTime: 100})
+		fmt.Println(resp.Bestmove)
+	}
 }
