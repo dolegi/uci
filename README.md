@@ -1,6 +1,8 @@
 # Universal Chess Interface
 
 Small wrapper for interacting with uci compliant chess engines.
+[Godoc](https://godoc.org/github.com/dolegi/uci)
+
 
 # Usage
 Import library
@@ -41,7 +43,6 @@ See example folder for a working example. Run with `go run example/main.go <path
 - [ ] ponderhit
 - [ ] debug mode
 - [ ] register
-- [ ] Validate Input
 
 # References
 - [UCI reference documention](https://www.shredderchess.com/chess-info/features/uci-universal-chess-interface.html)
