@@ -18,54 +18,60 @@ type engine struct {
 	Type   int
 }
 
+// Meta data about the engine
 type Meta struct {
-	Name    string
-	Author  string
-	Options []Option
+	Name    string   // Name of engine
+	Author  string   // Author of the engine
+	Options []Option // Available options for this engine
 }
 
+// Available options to set on this engine
 type Option struct {
-	Name    string
-	Type    string
-	Default interface{}
-	Min     int
-	Max     int
-	Vars    []string
+	Name    string      // Name of option
+	Type    string      // Type of option
+	Default interface{} // Default value of option
+	Min     int         // Min value of option
+	Max     int         // Max value of option
+	Vars    []string    // Enum vars for option
 }
 
+// Options for creating a new game
 type NewGameOpts struct {
-	Type int
-	Side int
+	Type int // Type of positioning. Must be uci.FEN or uci.ALG
+	Side int // Which side should the engine play as. Must be uci.W or uci.B
 }
 
+// Options to pass when looking for best move
 type GoOpts struct {
-	SearchMoves string
-	Ponder      bool
-	Wtime       int
-	Btime       int
-	Winc        int
-	Binc        int
-	MovesToGo   int
-	Depth       int
-	Nodes       int
-	Mate        int
-	MoveTime    int
+	SearchMoves string // <move1> .... <movei>. restrict search to this moves only
+	Ponder      bool   // start searching in pondering mode
+	Wtime       int    // number of ms white has left
+	Btime       int    // number of ms black has left
+	Winc        int    // number of ms white increases by each move
+	Binc        int    // number of ms black increases by each move
+	MovesToGo   int    // number of moves until next time control
+	Depth       int    // maximum search depth
+	Nodes       int    // maximum search nodes
+	Mate        int    // search for mate in x moves
+	MoveTime    int    // number of ms exactly to search for
 }
 
+// Response from searching
 type GoResp struct {
-	Bestmove string
-	Ponder   string
+	Bestmove string // Best move the engine could find
+	Ponder   string // Ponder move
 }
 
 const (
-	ALG int = 0
-	FEN int = 1
-	W   int = 0
-	B   int = 1
+	ALG int = 0 // Type of positioning. Full algorithmic positioning e.g e2e4 d7d6 ...
+	FEN int = 1 // Type of positioning. FEN string
+	W   int = 0 // Side to play as. White
+	B   int = 1 // Side to play as. Black
 )
 
 var execCommand = exec.Command
 
+// Create a new engine requires the path to a uci chess engine such as stockfish
 func NewEngine(path string) (*engine, error) {
 	eng := engine{}
 	cmd := execCommand(path)
@@ -135,6 +141,7 @@ func newOption(line string) (option Option) {
 	return
 }
 
+// Pass an option to the underlying engine
 func (eng *engine) SetOption(name string, value interface{}) bool {
 	for _, option := range eng.Meta.Options {
 		if option.Name == name {
@@ -160,6 +167,7 @@ func (eng *engine) SetOption(name string, value interface{}) bool {
 	return false
 }
 
+// Check if engine is ready to start receiving commands
 func (eng *engine) IsReady() bool {
 	eng.send("isready")
 	lines := eng.receive("readyok")
@@ -188,6 +196,7 @@ func (eng *engine) receive(stopPrefix string) (lines []string) {
 	return
 }
 
+// Start a new game. Only one game should be played at a time
 func (eng *engine) NewGame(opts NewGameOpts) {
 	if opts.Type == FEN {
 		if opts.Side == W {
@@ -204,6 +213,7 @@ func (eng *engine) NewGame(opts NewGameOpts) {
 	eng.Side = opts.Side
 }
 
+// Set the position of the game. Either full fen string or next position such as "e2e4"
 func (eng *engine) Position(pos string) {
 	if eng.Type == FEN {
 		eng.send("position fen " + pos)
@@ -220,6 +230,7 @@ func addOpt(name string, value int) string {
 	return ""
 }
 
+// Search for the bestmove
 func (eng *engine) Go(opts GoOpts) GoResp {
 	goCmd := "go "
 	if opts.Ponder {
@@ -245,6 +256,7 @@ func (eng *engine) Go(opts GoOpts) GoResp {
 	}
 }
 
+// Quit the engine. Engine struct cannot be used after this command has been sent
 func (eng *engine) Quit() {
 	eng.send("quit")
 	eng.stdin = nil
