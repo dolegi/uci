@@ -40,7 +40,7 @@ func TestNewEngine(t *testing.T) {
 }
 
 func TestNewEngineStockfish(t *testing.T) {
-	eng, err := NewEngine("./stockfish")
+	eng, err := NewEngine("./engines/stockfish")
 	expectedMeta := Meta{
 		Name:   "Stockfish 160219 64 POPCNT",
 		Author: "T. Romstad, M. Costalba, J. Kiiski, G. Linscott",
@@ -77,15 +77,15 @@ func TestNewEngineStockfish(t *testing.T) {
 }
 
 func TestIsReady(t *testing.T) {
-	eng, _ := NewEngine("./stockfish")
+	eng, _ := NewEngine("./engines/stockfish")
 	if eng.IsReady() != true {
 		log.Fatal("TestIsReady did not return true")
 	}
 }
 
 func TestNewGame(t *testing.T) {
-	eng, _ := NewEngine("./stockfish")
-	eng.NewGame(NewGameOpts{Type: FEN, Side: W})
+	eng, _ := NewEngine("./engines/stockfish")
+	eng.NewGame(NewGameOpts{Type: FEN, Side: White})
 
 	if eng.moves != "" {
 		log.Fatal("TestNewGame too many moves", eng.moves)
@@ -93,8 +93,8 @@ func TestNewGame(t *testing.T) {
 }
 
 func TestPositionFEN(t *testing.T) {
-	eng, _ := NewEngine("./stockfish")
-	eng.NewGame(NewGameOpts{Type: FEN, Side: W})
+	eng, _ := NewEngine("./engines/stockfish")
+	eng.NewGame(NewGameOpts{Type: FEN, Side: White})
 	eng.Position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
 
 	if eng.moves != "" {
@@ -103,8 +103,8 @@ func TestPositionFEN(t *testing.T) {
 }
 
 func TestPosition(t *testing.T) {
-	eng, _ := NewEngine("./stockfish")
-	eng.NewGame(NewGameOpts{ALG, B})
+	eng, _ := NewEngine("./engines/stockfish")
+	eng.NewGame(NewGameOpts{ALG, Black})
 	eng.Position("e2e4")
 	eng.Position("d7d6")
 
@@ -114,8 +114,8 @@ func TestPosition(t *testing.T) {
 }
 
 func TestGo(t *testing.T) {
-	eng, _ := NewEngine("./stockfish")
-	eng.NewGame(NewGameOpts{ALG, B})
+	eng, _ := NewEngine("./engines/stockfish")
+	eng.NewGame(NewGameOpts{ALG, Black})
 	eng.Position("e2e4")
 	resp := eng.Go(GoOpts{MoveTime: 100})
 	if len(resp.Bestmove) != 4 {

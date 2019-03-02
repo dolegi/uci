@@ -45,3 +45,4 @@ See example folder for a working example. Run with `go run example/main.go <path
 
 # References
 - [UCI reference documention](https://www.shredderchess.com/chess-info/features/uci-universal-chess-interface.html)
+- [Stockfish](https://github.com/official-stockfish/Stockfish)
