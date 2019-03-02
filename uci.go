@@ -2,7 +2,7 @@ package uci
 
 import (
 	"bufio"
-	"fmt"
+	"log"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -63,15 +63,15 @@ type GoResp struct {
 }
 
 const (
-	ALG int = 0 // Type of positioning. Full algorithmic positioning e.g e2e4 d7d6 ...
-	FEN int = 1 // Type of positioning. FEN string
-	W   int = 0 // Side to play as. White
-	B   int = 1 // Side to play as. Black
+	ALG   int = 0 // Type of positioning. Full algorithmic positioning e.g e2e4 d7d6 ...
+	FEN   int = 1 // Type of positioning. FEN string
+	White int = 0 // Side to play as. White
+	Black int = 1 // Side to play as. Black
 )
 
 var execCommand = exec.Command
 
-// Create a new engine requires the path to a uci chess engine such as stockfish
+// Create a new engine. Requires the path to a uci chess engine such as stockfish
 func NewEngine(path string) (*engine, error) {
 	eng := engine{}
 	cmd := execCommand(path)
@@ -191,7 +191,7 @@ func (eng *engine) receive(stopPrefix string) (lines []string) {
 		}
 	}
 	if err := eng.stdout.Err(); err != nil {
-		fmt.Println("reading standard input:", err)
+		log.Fatal("reading standard input:", err)
 	}
 	return
 }
@@ -199,7 +199,7 @@ func (eng *engine) receive(stopPrefix string) (lines []string) {
 // Start a new game. Only one game should be played at a time
 func (eng *engine) NewGame(opts NewGameOpts) {
 	if opts.Type == FEN {
-		if opts.Side == W {
+		if opts.Side == White {
 			eng.send("position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
 		} else {
 			eng.send("position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1")

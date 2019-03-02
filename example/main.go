@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/dolegi/uci"
-	"os"
 )
 
 func main() {
-	eng, _ := uci.NewEngine(os.Args[1])
+	eng, err := uci.NewEngine("./engines/stockfish")
+	fmt.Println(err)
 	eng.SetOption("Ponder", false)
 	eng.SetOption("Threads", "2")
 	if eng.IsReady() {
