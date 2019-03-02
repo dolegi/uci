@@ -13,7 +13,6 @@ import (
 // go infinite
 // stop
 // ponderhit
-// quit
 // debug mode
 
 type Engine struct {
@@ -252,6 +251,16 @@ func (eng *Engine) Go(opts GoOpts) GoResp {
 	}
 }
 
+func (eng *Engine) Quit() {
+	eng.send("quit")
+	eng.stdin = nil
+	eng.stdout = nil
+	eng.Meta = Meta{}
+	eng.moves = ""
+	eng.Side = 0
+	eng.Type = 0
+}
+
 func main() {
 	eng, _ := NewEngine("./stockfish")
 	eng.SetOption("Ponder", false)
@@ -262,4 +271,5 @@ func main() {
 		resp := eng.Go(GoOpts{MoveTime: 100})
 		fmt.Println(resp.Bestmove)
 	}
+	eng.Quit()
 }
