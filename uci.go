@@ -10,16 +10,15 @@ import (
 )
 
 // TODO
-// go infinite
-// stop
+// go infinite + stop
 // ponderhit
 // debug mode
 
-type Engine struct {
+type engine struct {
 	stdin  *bufio.Writer
 	stdout *bufio.Scanner
-	Meta   Meta
 	moves  string
+	Meta   Meta
 	Side   int
 	Type   int
 }
@@ -72,8 +71,8 @@ const (
 
 var execCommand = exec.Command
 
-func NewEngine(path string) (*Engine, error) {
-	eng := Engine{}
+func NewEngine(path string) (*engine, error) {
+	eng := engine{}
 	cmd := execCommand(path)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -88,11 +87,11 @@ func NewEngine(path string) (*Engine, error) {
 	}
 	eng.stdin = bufio.NewWriter(stdin)
 	eng.stdout = bufio.NewScanner(stdout)
-	eng.Meta = eng.GetMeta()
+	eng.Meta = eng.getMeta()
 	return &eng, nil
 }
 
-func (eng *Engine) GetMeta() (meta Meta) {
+func (eng *engine) getMeta() (meta Meta) {
 	eng.send("uci")
 	lines := eng.receive("uciok")
 
@@ -105,7 +104,7 @@ func (eng *Engine) GetMeta() (meta Meta) {
 		} else if strings.HasPrefix(line, authorPrefix) {
 			meta.Author = strings.TrimPrefix(line, authorPrefix)
 		} else if strings.HasPrefix(line, optionPrefix) {
-			meta.Options = append(meta.Options, NewOption(strings.TrimPrefix(line, optionPrefix)))
+			meta.Options = append(meta.Options, newOption(strings.TrimPrefix(line, optionPrefix)))
 		}
 	}
 	return meta
@@ -121,7 +120,7 @@ func getOption(line, regex string) interface{} {
 	return nil
 }
 
-func NewOption(line string) (option Option) {
+func newOption(line string) (option Option) {
 	option.Name, _ = getOption(line, `name (.*) type`).(string)
 	option.Type, _ = getOption(line, `type (\w+)`).(string)
 	option.Default = getOption(line, `default (\w+)`)
@@ -141,7 +140,7 @@ func NewOption(line string) (option Option) {
 	return
 }
 
-func (eng *Engine) SetOption(name string, value interface{}) bool {
+func (eng *engine) SetOption(name string, value interface{}) bool {
 	for _, option := range eng.Meta.Options {
 		if option.Name == name {
 			var v string
@@ -166,20 +165,20 @@ func (eng *Engine) SetOption(name string, value interface{}) bool {
 	return false
 }
 
-func (eng *Engine) IsReady() bool {
+func (eng *engine) IsReady() bool {
 	eng.send("isready")
 	lines := eng.receive("readyok")
 	return lines[0] == "readyok"
 }
 
-func (eng *Engine) send(input string) {
+func (eng *engine) send(input string) {
 	_, err := eng.stdin.WriteString(input + "\n")
 	if err == nil {
 		eng.stdin.Flush()
 	}
 }
 
-func (eng *Engine) receive(stopPrefix string) (lines []string) {
+func (eng *engine) receive(stopPrefix string) (lines []string) {
 	scanner := eng.stdout
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -194,7 +193,7 @@ func (eng *Engine) receive(stopPrefix string) (lines []string) {
 	return
 }
 
-func (eng *Engine) NewGame(opts NewGameOpts) {
+func (eng *engine) NewGame(opts NewGameOpts) {
 	if opts.Type == FEN {
 		if opts.Side == W {
 			eng.send("position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
@@ -210,7 +209,7 @@ func (eng *Engine) NewGame(opts NewGameOpts) {
 	eng.Side = opts.Side
 }
 
-func (eng *Engine) Position(pos string) {
+func (eng *engine) Position(pos string) {
 	if eng.Type == FEN {
 		eng.send("position fen " + pos)
 	} else {
@@ -226,7 +225,7 @@ func addOpt(name string, value int) string {
 	return ""
 }
 
-func (eng *Engine) Go(opts GoOpts) GoResp {
+func (eng *engine) Go(opts GoOpts) GoResp {
 	goCmd := "go "
 	if opts.Ponder {
 		goCmd += "ponder "
@@ -251,7 +250,7 @@ func (eng *Engine) Go(opts GoOpts) GoResp {
 	}
 }
 
-func (eng *Engine) Quit() {
+func (eng *engine) Quit() {
 	eng.send("quit")
 	eng.stdin = nil
 	eng.stdout = nil
@@ -259,17 +258,4 @@ func (eng *Engine) Quit() {
 	eng.moves = ""
 	eng.Side = 0
 	eng.Type = 0
-}
-
-func main() {
-	eng, _ := NewEngine("./stockfish")
-	eng.SetOption("Ponder", false)
-	eng.SetOption("Threads", "2")
-	if eng.IsReady() {
-		eng.NewGame(NewGameOpts{})
-		eng.Position("e2e4")
-		resp := eng.Go(GoOpts{MoveTime: 100})
-		fmt.Println(resp.Bestmove)
-	}
-	eng.Quit()
 }
