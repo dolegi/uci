@@ -213,13 +213,12 @@ func (eng *Engine) NewGame(opts NewGameOpts) {
 	eng.Side = opts.Side
 }
 
-// Set the position of the game. Either full fen string or next position such as "e2e4"
+// Set the position of the game. Either full fen string or full algorithm position
 func (eng *Engine) Position(pos string) {
 	if eng.Type == FEN {
 		eng.send("position fen " + pos)
 	} else {
-		eng.moves = eng.moves + " " + pos
-		eng.send("position " + eng.moves)
+		eng.send("position startpos moves " + pos)
 	}
 }
 
@@ -250,9 +249,18 @@ func (eng *Engine) Go(opts GoOpts) GoResp {
 	lines := eng.receive("bestmove")
 	words := strings.Split(lines[len(lines)-1], " ")
 
+	bestmove := ""
+	ponder := ""
+	if len(words) >= 2 {
+		bestmove = words[1]
+	}
+	if len(words) >= 4 {
+		ponder = words[3]
+	}
+
 	return GoResp{
-		Bestmove: words[1],
-		Ponder:   words[3],
+		Bestmove: bestmove,
+		Ponder:   ponder,
 	}
 }
 
