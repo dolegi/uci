@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-type engine struct {
+type Engine struct {
 	stdin  *bufio.Writer
 	stdout *bufio.Scanner
 	moves  string
@@ -18,14 +18,14 @@ type engine struct {
 	Type   int
 }
 
-// Meta data about the engine
+// Meta data about the Engine
 type Meta struct {
-	Name    string   // Name of engine
-	Author  string   // Author of the engine
-	Options []Option // Available options for this engine
+	Name    string   // Name of Engine
+	Author  string   // Author of the Engine
+	Options []Option // Available options for this Engine
 }
 
-// Available options to set on this engine
+// Available options to set on this Engine
 type Option struct {
 	Name    string      // Name of option
 	Type    string      // Type of option
@@ -38,7 +38,7 @@ type Option struct {
 // Options for creating a new game
 type NewGameOpts struct {
 	Type int // Type of positioning. Must be uci.FEN or uci.ALG
-	Side int // Which side should the engine play as. Must be uci.W or uci.B
+	Side int // Which side should the Engine play as. Must be uci.W or uci.B
 }
 
 // Options to pass when looking for best move
@@ -58,7 +58,7 @@ type GoOpts struct {
 
 // Response from searching
 type GoResp struct {
-	Bestmove string // Best move the engine could find
+	Bestmove string // Best move the Engine could find
 	Ponder   string // Ponder move
 }
 
@@ -71,9 +71,9 @@ const (
 
 var execCommand = exec.Command
 
-// Create a new engine. Requires the path to a uci chess engine such as stockfish
-func NewEngine(path string) (*engine, error) {
-	eng := engine{}
+// Create a new Engine. Requires the path to a uci chess Engine such as stockfish
+func NewEngine(path string) (*Engine, error) {
+	eng := Engine{}
 	cmd := execCommand(path)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -92,7 +92,7 @@ func NewEngine(path string) (*engine, error) {
 	return &eng, nil
 }
 
-func (eng *engine) getMeta() (meta Meta) {
+func (eng *Engine) getMeta() (meta Meta) {
 	eng.send("uci")
 	lines := eng.receive("uciok")
 
@@ -141,8 +141,8 @@ func newOption(line string) (option Option) {
 	return
 }
 
-// Pass an option to the underlying engine
-func (eng *engine) SetOption(name string, value interface{}) bool {
+// Pass an option to the underlying Engine
+func (eng *Engine) SetOption(name string, value interface{}) bool {
 	for _, option := range eng.Meta.Options {
 		if option.Name == name {
 			var v string
@@ -167,21 +167,21 @@ func (eng *engine) SetOption(name string, value interface{}) bool {
 	return false
 }
 
-// Check if engine is ready to start receiving commands
-func (eng *engine) IsReady() bool {
+// Check if Engine is ready to start receiving commands
+func (eng *Engine) IsReady() bool {
 	eng.send("isready")
 	lines := eng.receive("readyok")
 	return lines[0] == "readyok"
 }
 
-func (eng *engine) send(input string) {
+func (eng *Engine) send(input string) {
 	_, err := eng.stdin.WriteString(input + "\n")
 	if err == nil {
 		eng.stdin.Flush()
 	}
 }
 
-func (eng *engine) receive(stopPrefix string) (lines []string) {
+func (eng *Engine) receive(stopPrefix string) (lines []string) {
 	scanner := eng.stdout
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -197,7 +197,7 @@ func (eng *engine) receive(stopPrefix string) (lines []string) {
 }
 
 // Start a new game. Only one game should be played at a time
-func (eng *engine) NewGame(opts NewGameOpts) {
+func (eng *Engine) NewGame(opts NewGameOpts) {
 	if opts.Type == FEN {
 		if opts.Side == White {
 			eng.send("position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
@@ -214,7 +214,7 @@ func (eng *engine) NewGame(opts NewGameOpts) {
 }
 
 // Set the position of the game. Either full fen string or next position such as "e2e4"
-func (eng *engine) Position(pos string) {
+func (eng *Engine) Position(pos string) {
 	if eng.Type == FEN {
 		eng.send("position fen " + pos)
 	} else {
@@ -231,7 +231,7 @@ func addOpt(name string, value int) string {
 }
 
 // Search for the bestmove
-func (eng *engine) Go(opts GoOpts) GoResp {
+func (eng *Engine) Go(opts GoOpts) GoResp {
 	goCmd := "go "
 	if opts.Ponder {
 		goCmd += "ponder "
@@ -256,8 +256,8 @@ func (eng *engine) Go(opts GoOpts) GoResp {
 	}
 }
 
-// Quit the engine. Engine struct cannot be used after this command has been sent
-func (eng *engine) Quit() {
+// Quit the Engine. Engine struct cannot be used after this command has been sent
+func (eng *Engine) Quit() {
 	eng.send("quit")
 	eng.stdin = nil
 	eng.stdout = nil
