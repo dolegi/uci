@@ -10,12 +10,11 @@ import (
 )
 
 type Engine struct {
-	stdin  *bufio.Writer
-	stdout *bufio.Scanner
-	moves  string
-	Meta   Meta
-	Side   int
-	Type   int
+	stdin    *bufio.Writer
+	stdout   *bufio.Scanner
+	Meta     Meta
+	Side     int
+	StartPos string
 }
 
 // Meta data about the Engine
@@ -37,8 +36,8 @@ type Option struct {
 
 // Options for creating a new game
 type NewGameOpts struct {
-	Type int // Type of positioning. Must be uci.FEN or uci.ALG
-	Side int // Which side should the Engine play as. Must be uci.W or uci.B
+	StartPos string // Start position of the game in FEN format. Default is `startpos`
+	Side     int    // Which side should the Engine play as. Must be uci.W or uci.B
 }
 
 // Options to pass when looking for best move
@@ -63,8 +62,6 @@ type GoResp struct {
 }
 
 const (
-	ALG   int = 0 // Type of positioning. Full algorithmic positioning e.g e2e4 d7d6 ...
-	FEN   int = 1 // Type of positioning. FEN string
 	White int = 0 // Side to play as. White
 	Black int = 1 // Side to play as. Black
 )
@@ -198,33 +195,23 @@ func (eng *Engine) receive(stopPrefix string) (lines []string) {
 
 // Start a new game. Only one game should be played at a time
 func (eng *Engine) NewGame(opts NewGameOpts) {
-	if opts.Type == FEN {
-		if opts.Side == White {
-			eng.send("position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-		} else {
-			eng.send("position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1")
-		}
-		eng.moves = ""
+	if opts.StartPos == "" || opts.StartPos == "startpos" {
+		eng.StartPos = "position startpos moves "
 	} else {
-		eng.moves = "startpos moves"
-		eng.send("position " + eng.moves)
+		eng.StartPos = "position fen " + opts.StartPos + " moves "
 	}
-	eng.Type = opts.Type
+	eng.send(eng.StartPos)
 	eng.Side = opts.Side
 }
 
-// Set the position of the game. Either full fen string or full algorithm position
+// Set the position of the game after the initial start position. Algrebriac notiation, e.g `e2e4 e7e6`
 func (eng *Engine) Position(pos string) {
-	if eng.Type == FEN {
-		eng.send("position fen " + pos)
-	} else {
-		eng.send("position startpos moves " + pos)
-	}
+	eng.send(eng.StartPos + pos)
 }
 
 func addOpt(name string, value int) string {
 	if value > 0 {
-		return name + " " + strconv.Itoa(value)
+		return name + " " + strconv.Itoa(value) + " "
 	}
 	return ""
 }
@@ -270,7 +257,6 @@ func (eng *Engine) Quit() {
 	eng.stdin = nil
 	eng.stdout = nil
 	eng.Meta = Meta{}
-	eng.moves = ""
 	eng.Side = 0
-	eng.Type = 0
+	eng.StartPos = ""
 }

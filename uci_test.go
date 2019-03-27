@@ -83,39 +83,25 @@ func TestIsReady(t *testing.T) {
 	}
 }
 
-func TestNewGame(t *testing.T) {
+func TestGoFEN(t *testing.T) {
 	eng, _ := NewEngine("./engines/stockfish")
-	eng.NewGame(NewGameOpts{Type: FEN, Side: White})
-
-	if eng.moves != "" {
-		log.Fatal("TestNewGame too many moves", eng.moves)
-	}
-}
-
-func TestPositionFEN(t *testing.T) {
-	eng, _ := NewEngine("./engines/stockfish")
-	eng.NewGame(NewGameOpts{Type: FEN, Side: White})
-	eng.Position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-
-	if eng.moves != "" {
-		log.Fatal("TestPositionFEN too many moves")
-	}
-}
-
-func TestPosition(t *testing.T) {
-	eng, _ := NewEngine("./engines/stockfish")
-	eng.NewGame(NewGameOpts{ALG, Black})
+	eng.NewGame(NewGameOpts{
+		StartPos: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
+		Side:     White,
+	})
 	eng.Position("e2e4")
-	eng.Position("d7d6")
-
-	if eng.moves != "startpos moves e2e4 d7d6" {
-		log.Fatal("TestPosition wrong amount of moves", eng.moves)
+	resp := eng.Go(GoOpts{MoveTime: 100})
+	if len(resp.Bestmove) != 4 {
+		log.Fatal("TestGoFEN wrong best move", resp.Bestmove)
+	}
+	if len(resp.Ponder) != 4 {
+		log.Fatal("TestGoFEN wrong ponder", resp.Ponder)
 	}
 }
 
 func TestGo(t *testing.T) {
 	eng, _ := NewEngine("./engines/stockfish")
-	eng.NewGame(NewGameOpts{ALG, Black})
+	eng.NewGame(NewGameOpts{"", Black})
 	eng.Position("e2e4")
 	resp := eng.Go(GoOpts{MoveTime: 100})
 	if len(resp.Bestmove) != 4 {
