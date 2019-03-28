@@ -36,6 +36,9 @@ type Option struct {
 
 // Options for creating a new game
 type NewGameOpts struct {
+	Variant struct {
+		Key string
+	}
 	StartPos string // Start position of the game in FEN format. Default is `startpos`
 	Side     int    // Which side should the Engine play as. Must be uci.W or uci.B
 }
@@ -157,6 +160,7 @@ func (eng *Engine) SetOption(name string, value interface{}) bool {
 					v = "false"
 				}
 			}
+			log.Println("setoption name " + name + " value " + v)
 			eng.send("setoption name " + name + " value " + v)
 			return true
 		}
@@ -195,6 +199,11 @@ func (eng *Engine) receive(stopPrefix string) (lines []string) {
 
 // Start a new game. Only one game should be played at a time
 func (eng *Engine) NewGame(opts NewGameOpts) {
+	if opts.Variant.Key == "chess960" {
+		eng.SetOption("UCI_Chess960", "true")
+	} else {
+		eng.SetOption("UCI_Chess960", "false")
+	}
 	if opts.StartPos == "" || opts.StartPos == "startpos" {
 		eng.StartPos = "position startpos moves "
 	} else {
