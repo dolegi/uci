@@ -40,14 +40,7 @@ type NewGameOpts struct {
 		Key string
 	}
 	InitialFen string
-	State struct {
-		Type  string
-		Moves string
-		Wtime int
-		Btime int
-		Winc  int
-		Binc  int
-	}
+	Moves string
 	Side     int    // Which side should the Engine play as. Must be uci.W or uci.B
 }
 
@@ -226,7 +219,7 @@ func (eng *Engine) NewGame(opts NewGameOpts) {
 	} else {
 		eng.StartPos = "position fen " + opts.InitialFen + " moves "
 	}
-	eng.send(eng.StartPos + opts.State.Moves)
+	eng.send(eng.StartPos + opts.Moves)
 	eng.Side = opts.Side
 }
 
