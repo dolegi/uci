@@ -219,13 +219,13 @@ func (eng *Engine) NewGame(opts NewGameOpts) {
 	} else {
 		eng.StartPos = "position fen " + opts.InitialFen + " moves "
 	}
-	eng.send(eng.StartPos + opts.Moves)
+	eng.Position(opts.Moves)
 	eng.Side = opts.Side
 }
 
 // Set the position of the game after the initial start position. Algrebriac notiation, e.g `e2e4 e7e6`
-func (eng *Engine) Position(pos string) {
-	eng.send(eng.StartPos + pos)
+func (eng *Engine) Position(moves string) {
+	eng.send(eng.StartPos + moves)
 }
 
 func addOpt(name string, value int) string {
