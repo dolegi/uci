@@ -36,7 +36,11 @@ type Option struct {
 
 // Options for creating a new game
 type NewGameOpts struct {
-	StartPos string // Start position of the game in FEN format. Default is `startpos`
+	Variant struct {
+		Key string
+	}
+	InitialFen string
+	Moves string
 	Side     int    // Which side should the Engine play as. Must be uci.W or uci.B
 }
 
@@ -195,18 +199,33 @@ func (eng *Engine) receive(stopPrefix string) (lines []string) {
 
 // Start a new game. Only one game should be played at a time
 func (eng *Engine) NewGame(opts NewGameOpts) {
-	if opts.StartPos == "" || opts.StartPos == "startpos" {
+	if opts.Variant.Key == "chess960" {
+		eng.SetOption("UCI_Variant", "chess")
+		eng.SetOption("UCI_Chess960", "true")
+	} else {
+		if opts.Variant.Key == "antichess" {
+			eng.SetOption("UCI_Variant", "giveaway")
+		} else if opts.Variant.Key == "threeCheck" {
+			eng.SetOption("UCI_Variant", "3check")
+		} else if opts.Variant.Key == "fromPosition" || opts.Variant.Key == "standard" {
+			eng.SetOption("UCI_Variant", "chess")
+		} else {
+			eng.SetOption("UCI_Variant", strings.ToLower(opts.Variant.Key))
+		}
+		eng.SetOption("UCI_Chess960", "false")
+	}
+	if opts.InitialFen == "" || opts.InitialFen == "startpos" {
 		eng.StartPos = "position startpos moves "
 	} else {
-		eng.StartPos = "position fen " + opts.StartPos + " moves "
+		eng.StartPos = "position fen " + opts.InitialFen + " moves "
 	}
-	eng.send(eng.StartPos)
+	eng.Position(opts.Moves)
 	eng.Side = opts.Side
 }
 
 // Set the position of the game after the initial start position. Algrebriac notiation, e.g `e2e4 e7e6`
-func (eng *Engine) Position(pos string) {
-	eng.send(eng.StartPos + pos)
+func (eng *Engine) Position(moves string) {
+	eng.send(eng.StartPos + moves)
 }
 
 func addOpt(name string, value int) string {
