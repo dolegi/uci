@@ -152,6 +152,11 @@ func (eng *Engine) SetOption(name string, value interface{}) bool {
 				v, _ = value.(string)
 			case int:
 				vv, _ := value.(int)
+				if (vv < option.Min) {
+					vv = option.Min
+				} else if (vv > option.Max) {
+					vv = option.Max
+				}
 				v = strconv.Itoa(vv)
 			case bool:
 				vv, _ := value.(bool)
