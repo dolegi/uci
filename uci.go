@@ -204,13 +204,13 @@ func (eng *Engine) receive(stopPrefix string) (lines []string) {
 
 // Start a new game. Only one game should be played at a time
 func (eng *Engine) NewGame(opts NewGameOpts) {
-	if opts.Variant.Key == "chess960" {
+	if opts.Variant.Key == "chess960" || opts.Variant.Key == "fromPosition" {
 		eng.SetOption("UCI_Variant", "chess")
 		eng.SetOption("UCI_Chess960", "true")
 	} else {
 		if opts.Variant.Key == "threeCheck" {
 			eng.SetOption("UCI_Variant", "3check")
-		} else if opts.Variant.Key == "fromPosition" || opts.Variant.Key == "standard" {
+		} else if opts.Variant.Key == "standard" {
 			eng.SetOption("UCI_Variant", "chess")
 		} else {
 			eng.SetOption("UCI_Variant", strings.ToLower(opts.Variant.Key))
