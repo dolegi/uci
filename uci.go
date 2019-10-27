@@ -40,8 +40,8 @@ type NewGameOpts struct {
 		Key string
 	}
 	InitialFen string
-	Moves string
-	Side     int    // Which side should the Engine play as. Must be uci.W or uci.B
+	Moves      string
+	Side       int // Which side should the Engine play as. Must be uci.W or uci.B
 }
 
 // Options to pass when looking for best move
@@ -152,9 +152,9 @@ func (eng *Engine) SetOption(name string, value interface{}) bool {
 				v, _ = value.(string)
 			case int:
 				vv, _ := value.(int)
-				if (vv < option.Min) {
+				if vv < option.Min {
 					vv = option.Min
-				} else if (vv > option.Max) {
+				} else if vv > option.Max {
 					vv = option.Max
 				}
 				v = strconv.Itoa(vv)
@@ -256,6 +256,8 @@ func (eng *Engine) Go(opts GoOpts) GoResp {
 
 	eng.send(goCmd)
 	lines := eng.receive("bestmove")
+
+	log.Println(lines)
 	words := strings.Split(lines[len(lines)-1], " ")
 
 	bestmove := ""
