@@ -86,8 +86,8 @@ func TestIsReady(t *testing.T) {
 func TestGoFEN(t *testing.T) {
 	eng, _ := NewEngine("./engines/stockfish")
 	eng.NewGame(NewGameOpts{
-		StartPos: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
-		Side:     White,
+		InitialFen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
+		Side: White,
 	})
 	eng.Position("e2e4")
 	resp := eng.Go(GoOpts{MoveTime: 100})
@@ -101,7 +101,10 @@ func TestGoFEN(t *testing.T) {
 
 func TestGo(t *testing.T) {
 	eng, _ := NewEngine("./engines/stockfish")
-	eng.NewGame(NewGameOpts{"", Black})
+	eng.NewGame(NewGameOpts{
+		InitialFen: "",
+		Side: Black,
+	})
 	eng.Position("e2e4")
 	resp := eng.Go(GoOpts{MoveTime: 100})
 	if len(resp.Bestmove) != 4 {
