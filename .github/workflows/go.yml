@@ -29,6 +29,7 @@ jobs:
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure
         fi
+        sudo apt install stockfish
 
     - name: Build
       run: go build -v .
